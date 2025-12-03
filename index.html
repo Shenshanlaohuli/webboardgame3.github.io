@@ -8,10 +8,10 @@
         :root {
             --card-width: 70px;
             --card-height: 100px;
-            --bg-color: #006064; /* 深青色背景 */
-            --table-color: #00838f; /* 桌面青色 */
+            --bg-color: #006064;
+            --table-color: #00838f;
             --red: #e74c3c;
-            --yellow: #ffd700; /* 鲜艳黄 */
+            --yellow: #ffd700;
             --blue: #3498db;
             --green: #2ecc71;
         }
@@ -42,8 +42,8 @@
         }
         
         h1 { 
-            margin-bottom: 30px; 
-            font-size: 2.5em; 
+            margin-bottom: 20px; 
+            font-size: 2.2em; 
             text-shadow: 0 0 10px #fff; 
             text-align: center; 
             line-height: 1.2;
@@ -51,24 +51,24 @@
 
         .rules-box {
             background: rgba(255, 255, 255, 0.1);
-            padding: 20px;
+            padding: 15px;
             border-radius: 10px;
             max-width: 500px;
             border: 1px solid rgba(255, 255, 255, 0.2);
-            font-size: 0.9em;
-            line-height: 1.6;
+            font-size: 0.85em;
+            line-height: 1.5;
             color: #ddd;
-            margin-top: 20px; 
+            margin-top: 15px; 
         }
-        .rules-box h3 { margin-top: 0; color: #f1c40f; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 5px; }
-        .rules-box ul { padding-left: 20px; margin-bottom: 0; }
-        .rules-box li { margin-bottom: 8px; }
+        .rules-box h3 { margin-top: 0; color: #f1c40f; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 5px; margin-bottom: 5px;}
+        .rules-box ul { padding-left: 20px; margin-bottom: 0; margin-top: 5px; }
+        .rules-box li { margin-bottom: 5px; }
         
-        .btn-group { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; margin-bottom: 10px;}
+        .btn-group { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; margin-bottom: 5px;}
         
         button {
-            padding: 15px 30px;
-            font-size: 1.2em;
+            padding: 12px 25px;
+            font-size: 1.1em;
             cursor: pointer;
             background: #e67e22;
             border: none;
@@ -81,43 +81,45 @@
         }
         button:active { transform: translateY(4px); box-shadow: none; }
 
-        /* Game Area */
+        /* Game Area Layout */
         #game-area {
             flex: 1;
             background-color: var(--table-color);
             position: relative;
-            display: none; /* Hidden initially */
+            display: none; 
             flex-direction: column;
+            /* Space out content, ensuring bottom adheres to bottom but pushes up if needed */
+            justify-content: space-between; 
+            overflow: hidden;
         }
 
-        /* Top Score Board */
+        /* 1. Top Score Board */
         #top-score-panel {
             background: rgba(0, 0, 0, 0.4);
             padding: 0; 
             display: block;
             border-bottom: 1px solid rgba(255,255,255,0.1);
-            min-height: 50px;
+            min-height: 40px;
             flex-shrink: 0;
-            overflow-x: auto; /* Horizontal scroll */
+            overflow-x: auto; 
             white-space: nowrap;
         }
         
         #score-table {
-            font-size: 0.75em;
+            font-size: 0.7em;
             border-collapse: separate; 
             border-spacing: 0;
             width: auto;
             min-width: 100%;
         }
         #score-table th, #score-table td {
-            padding: 4px 6px;
+            padding: 2px 5px;
             border-right: 1px solid rgba(255,255,255,0.2);
             border-bottom: 1px solid rgba(255,255,255,0.2);
             text-align: center;
         }
         #score-table th { background: #263238; color: #ddd; }
         
-        /* Sticky Name Column */
         #score-table td:first-child, #score-table th:first-child {
             position: sticky;
             left: 0;
@@ -128,30 +130,29 @@
         }
         #score-table tr:nth-child(even) td:first-child { background: #37474f; }
 
-        /* Detailed Scores Styling */
-        .sc-detail { display: flex; gap: 6px; align-items: center; justify-content: center; }
-        .sc-val { font-weight: bold; width: 14px; text-align: center; }
+        .sc-detail { display: flex; gap: 4px; align-items: center; justify-content: center; }
+        .sc-val { font-weight: bold; width: 12px; text-align: center; }
         .sc-val.r { color: #ff6b6b; }
         .sc-val.y { color: #ffeaa7; }
         .sc-val.b { color: #74b9ff; }
         .sc-val.g { color: #55efc4; }
 
-        /* Opponents */
+        /* 2. Opponents Area */
         #opponents-area {
-            flex: 1;
+            flex: 0 0 auto;
             display: flex;
             justify-content: space-around;
             align-items: flex-start;
-            padding-top: 10px;
-            flex-shrink: 0;
+            padding-top: 2px;
+            padding-bottom: 2px;
         }
 
         .player-box {
             background: rgba(0,0,0,0.3);
-            padding: 5px 8px;
+            padding: 2px 6px;
             border-radius: 8px;
             text-align: center;
-            min-width: 85px;
+            min-width: 90px;
             max-width: 120px;
             border: 2px solid transparent;
             transition: all 0.3s;
@@ -165,32 +166,40 @@
         .suit-counts {
             display: flex;
             justify-content: center;
-            gap: 3px;
-            margin-top: 4px;
-            font-size: 0.75em;
+            gap: 6px;
+            margin-top: 2px;
+            font-size: 1.3em;
             flex-wrap: wrap;
+            line-height: 1;
         }
-        .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right:1px;}
+        .dot { 
+            width: 14px; height: 14px;
+            border-radius: 50%; 
+            display: inline-block; 
+            margin-right: 3px;
+            vertical-align: middle; 
+            position: relative; top: -2px;
+            border: 1px solid rgba(0,0,0,0.2);
+        }
 
-        /* Won Pile */
         .won-pile-container {
             display: flex;
             justify-content: center;
-            margin-top: 5px;
-            min-height: 35px;
+            margin-top: 2px;
+            min-height: 20px;
             height: auto;
             background: rgba(0,0,0,0.2);
             border-radius: 4px;
-            padding: 4px;
+            padding: 2px;
             min-width: 60px;
             flex-wrap: wrap; 
-            gap: 3px;
+            gap: 2px;
         }
 
         .mini-card {
-            width: 24px;
-            height: 32px;
-            border-radius: 3px;
+            width: 18px;
+            height: 24px;
+            border-radius: 2px;
             background-color: white;
             display: flex;
             justify-content: center;
@@ -200,45 +209,60 @@
             margin-left: 0; 
             position: relative;
             font-weight: 900;
-            font-size: 18px; 
+            font-size: 14px; 
             line-height: 1;
         }
-        
         .mini-card.red { background: var(--red); color: white; }
         .mini-card.yellow { background: var(--yellow); color: black; }
         .mini-card.blue { background: var(--blue); color: white; }
         .mini-card.green { background: var(--green); color: white; }
 
 
-        /* Center Area */
+        /* 3. Center Area (Compressed & Reorganized) */
         #center-area {
-            flex: 3;
+            flex: 1 1 auto;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center; 
+            justify-content: center; /* Centered but content is small */
             position: relative;
-            overflow-y: auto;
+            padding-bottom: 10px;
         }
 
         #instruction-text {
-            font-size: 1.5em;
+            font-size: 1.2em;
             font-weight: bold;
             color: #ffd700;
             text-shadow: 2px 2px 2px black;
-            margin-bottom: 10px; 
-            height: 35px;
+            margin-bottom: 5px; 
+            height: 25px;
             text-align: center;
             width: 100%;
             pointer-events: none;
             white-space: nowrap;
         }
 
-        .center-label { font-size: 0.8em; opacity: 0.8; margin-bottom: 3px; margin-top: 5px;}
+        /* Horizontal Layout for Spotlight + Shadows */
+        .center-row {
+            display: flex;
+            flex-direction: row;
+            gap: 20px; /* Separation between Spotlight and Shadows */
+            align-items: flex-start;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .column-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .center-label { font-size: 0.7em; opacity: 0.8; margin-bottom: 2px; white-space: nowrap;}
         
         .spotlight-container, .shadows-container, .trick-container {
             display: flex;
-            gap: 8px;
+            gap: 4px;
             align-items: center;
             justify-content: center;
         }
@@ -249,138 +273,112 @@
             align-items: center;
         }
         .trick-player-label {
-            font-size: 0.75em;
+            font-size: 0.65em;
             color: #ddd;
-            margin-top: 4px;
+            margin-top: 2px;
             text-shadow: 1px 1px 1px black;
             white-space: nowrap;
         }
 
-        /* Cards General */
+        /* Cards Base */
         .card {
-            width: var(--card-width);
-            height: var(--card-height);
-            border-radius: 6px;
+            border-radius: 4px;
             background-color: white;
             position: relative;
-            box-shadow: 1px 1px 4px rgba(0,0,0,0.4);
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.4);
             display: flex;
             justify-content: center;
             align-items: center;
             font-weight: bold;
-            font-size: 1.5em;
             color: #333;
             user-select: none;
             transition: transform 0.2s;
         }
-
-        .card.small {
-            width: calc(var(--card-width) * 0.6);
-            height: calc(var(--card-height) * 0.6);
-            font-size: 1em;
-        }
-
         .card.red { background: var(--red); color: white; }
         .card.yellow { background: var(--yellow); color: black; }
         .card.blue { background: var(--blue); color: white; }
         .card.green { background: var(--green); color: white; }
         
-        .card .corner {
-            position: absolute;
-            top: 4px; left: 4px;
-            font-size: 0.6em;
+        /* === CENTER AREA CARDS (TINY) === */
+        #center-area .card {
+            width: 36px;  /* Tiny width */
+            height: 52px; /* Tiny height */
+            font-size: 1.3em; /* Readable font */
         }
-
-        /* === Central Cards (Trick & Spotlight) Styling === */
-        #trick-container .card,
-        #spotlight-container .card {
-            font-size: 2.2em; /* Adjusted size */
-        }
-        #trick-container .card .corner,
-        #spotlight-container .card .corner {
-            display: none; /* Hide top-left number */
-        }
+        #center-area .card .corner { display: none; }
 
         .card.shadow-card { color: transparent; }
-        .card.shadow-card .corner { display: none; }
-
-        .card.selectable:hover {
-            transform: translateY(-20px);
-            cursor: pointer;
-            z-index: 100;
-            box-shadow: 0 0 15px white;
-        }
-        
+        .card.selectable:hover { transform: translateY(-10px); z-index: 100; }
         .card.disabled { filter: brightness(0.5); cursor: not-allowed; }
 
-        /* Player Area Container */
+        /* 4. Player Area (Moved Up significantly) */
         #player-container-wrapper {
-            flex-shrink: 0;
+            flex: 0 0 auto;
             position: relative;
             z-index: 20;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding-bottom: 20px;
+            padding-bottom: 20px; /* Space from bottom edge */
+            background: linear-gradient(to top, rgba(0,0,0,0.2), transparent);
+        }
+
+        #game-log {
+            text-align: center;
+            color: rgba(255,255,255,0.8);
+            font-size: 0.8em;
+            pointer-events: none;
+            height: 20px;
+            overflow: hidden;
+            text-shadow: 1px 1px 2px black;
+            margin-bottom: 2px; 
+            white-space: nowrap;
         }
 
         #human-won-wrapper {
-            margin-bottom: 5px;
+            margin-bottom: 2px;
             text-align: center;
             width: 100%;
             max-width: 300px; 
         }
-        .human-won-label { font-size: 0.8em; color: #aaa; margin-bottom: 2px; }
+        .human-won-label { font-size: 0.7em; color: #aaa; margin-bottom: 1px; }
 
-        /* Player Hand Specific Styles */
+        /* Player Hand Container */
         #player-hand {
-            height: 160px;
+            height: 115px; /* Reserved height for hand */
             display: flex;
             justify-content: center;
             align-items: flex-end;
             width: 100%;
         }
 
-        /* HAND CARDS */
+        /* PLAYER HAND CARDS (Standard Size, Visible) */
         #player-hand .card {
-            margin-left: -40px; 
+            width: 70px; 
+            height: 100px; 
+            font-size: 2.2em; 
+            margin-left: -40px; /* Overlap */
             transform-origin: bottom center;
-            width: 80px; 
-            height: 115px; 
-            font-size: 2.5em; 
-            box-shadow: -2px 0 6px rgba(0,0,0,0.4);
+            box-shadow: -2px 0 5px rgba(0,0,0,0.5);
         }
-        
-        /* === PLAYER HAND CORNER NUMBER (BIGGER) === */
         #player-hand .card .corner {
-            font-size: 0.6em; /* Increased size for readability */
-            top: 4px; left: 6px;
+            position: absolute;
+            top: 4px; left: 4px;
+            font-size: 0.55em;
+            display: block;
         }
-        
         #player-hand .card:first-child { margin-left: 0; }
 
-        /* Log & Modal */
-        #game-log {
-            text-align: center;
-            color: rgba(255,255,255,0.7);
-            font-size: 0.85em;
-            pointer-events: none;
-            max-height: 60px;
-            overflow: hidden;
-            text-shadow: 1px 1px 2px black;
-            margin-bottom: 5px; 
-        }
-
+        /* Modal */
         #modal-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
             display: none;
             justify-content: center;
             align-items: center;
             z-index: 50;
         }
-
         .modal-content {
             background: #006064; 
             padding: 20px;
@@ -392,32 +390,22 @@
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
             border: 1px solid rgba(255,255,255,0.2);
         }
-        
         .result-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em; }
         .result-table th, .result-table td { border: 1px solid #7f8c8d; padding: 5px; text-align: center; }
         .result-table th { background: rgba(0,0,0,0.2); }
-        
         .suit-icon { width: 15px; height: 15px; display: inline-block; border-radius: 2px; vertical-align: middle;}
 
-        /* Shadow selection mode */
         .shadow-select-mode .shadows-container .card {
             cursor: pointer;
             animation: pulse 1s infinite;
             border: 2px solid white;
         }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
-        @media (max-width: 360px) {
-            #player-hand .card {
-                width: 70px;
-                height: 100px;
-                font-size: 2em;
-                margin-left: -35px;
-            }
+        /* Ultra-small screen protection */
+        @media (max-height: 600px) {
+            #player-hand .card { height: 80px; width: 56px; font-size: 1.8em; }
+            #opponents-area { transform: scale(0.9); }
         }
 
     </style>
@@ -428,14 +416,12 @@
     <div id="start-screen">
         <h1>Chasing Shadows<br>暗影追踪</h1>
         
-        <!-- Buttons Moved Here -->
         <div class="btn-group">
             <button onclick="game.init(3)">3 人游戏</button>
             <button onclick="game.init(4)">4 人游戏</button>
             <button onclick="game.init(5)">5 人游戏</button>
         </div>
 
-        <!-- Rules Moved Below -->
         <div class="rules-box">
             <h3>玩法简介</h3>
             <ul>
@@ -449,47 +435,53 @@
     <!-- Game Area -->
     <div id="game-area">
         
-        <!-- Top Score Panel -->
+        <!-- 1. Score Board -->
         <div id="top-score-panel">
             <table id="score-table">
                 <!-- Populated by JS -->
             </table>
         </div>
 
+        <!-- 2. Opponents -->
         <div id="opponents-area">
             <!-- Bots generated here -->
         </div>
 
+        <!-- 3. Center Play Area -->
         <div id="center-area">
-            <!-- Instruction Text -->
             <div id="instruction-text"></div>
 
-            <div style="text-align:center">
-                <div class="center-label">聚光灯 (目标 <span id="spotlight-val">?</span>)</div>
-                <div class="spotlight-container" id="spotlight-container"></div>
-            </div>
-            
-            <div style="text-align:center;">
-                <div class="center-label">跟随牌 (Shadows)</div>
-                <div class="shadows-container" id="shadows-container"></div>
+            <!-- Top Row: Spotlight + Shadows -->
+            <div class="center-row">
+                <!-- Left: Spotlight -->
+                <div class="column-group">
+                    <div class="center-label">聚光灯 (<span id="spotlight-val">?</span>)</div>
+                    <div class="spotlight-container" id="spotlight-container"></div>
+                </div>
+                
+                <!-- Right: Shadows -->
+                <div class="column-group">
+                    <div class="center-label">跟随牌</div>
+                    <div class="shadows-container" id="shadows-container"></div>
+                </div>
             </div>
 
-            <div style="text-align:center; min-height: 100px; margin-top: 5px;">
+            <!-- Bottom Row: Trick Cards -->
+            <div class="column-group">
                 <div class="center-label">本回合出牌</div>
                 <div class="trick-container" id="trick-container"></div>
             </div>
         </div>
 
-        <div id="game-log"></div>
-
+        <!-- 4. Player Area -->
         <div id="player-container-wrapper">
-            <!-- Human Won Pile -->
+            <div id="game-log"></div>
+            
             <div id="human-won-wrapper">
                 <div class="human-won-label">你赢得的牌</div>
                 <div class="won-pile-container" id="human-won-pile"></div>
             </div>
             
-            <!-- Human Hand -->
             <div id="player-hand"></div>
         </div>
     </div>
@@ -571,7 +563,7 @@
                 // Header
                 let html = `<thead><tr><th>玩家</th>`;
                 for(let r=1; r<=this.maxRound; r++) {
-                    html += `<th>第${r}轮 (红黄蓝绿)</th>`;
+                    html += `<th>R${r}</th>`;
                 }
                 html += `</tr></thead><tbody>`;
 
@@ -596,7 +588,6 @@
                                 </div>
                             </td>`;
                         } else {
-                            // Placeholder
                             html += `<td>
                                 <div class="sc-detail" style="opacity:0.5">
                                     <span class="sc-val r">-</span>
@@ -655,7 +646,7 @@
                 });
 
                 this.updatePlayerHandUI();
-                this.updateScorePilesUI(); // Clear/Init won piles
+                this.updateScorePilesUI(); 
                 this.updateOpponentStats();
 
                 this.currentPlayerIndex = this.startPlayerIndex;
