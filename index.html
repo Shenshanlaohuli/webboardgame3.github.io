@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chasing Shadows 暗影追踪</title>
+    <style>
+        :root {
+            --card-width: 70px;
+            --card-height: 100px;
+            --bg-color: #006064; /* 深青色背景 */
+            --table-color: #00838f; /* 桌面青色 */
+            --red: #e74c3c;
+            --yellow: #ffd700; /* 鲜艳黄 */
+            --blue: #3498db;
+            --green: #2ecc71;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: white;
+            margin: 0;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Start Screen */
+        #start-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.92);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        h1 { 
+            margin-bottom: 30px; 
+            font-size: 2.5em; 
+            text-shadow: 0 0 10px #fff; 
+            text-align: center; 
+            line-height: 1.2;
+        }
+
+        .rules-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 500px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 0.9em;
+            line-height: 1.6;
+            color: #ddd;
+            margin-top: 20px; 
+        }
+        .rules-box h3 { margin-top: 0; color: #f1c40f; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 5px; }
+        .rules-box ul { padding-left: 20px; margin-bottom: 0; }
+        .rules-box li { margin-bottom: 8px; }
+        
+        .btn-group { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; margin-bottom: 10px;}
+        
+        button {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            cursor: pointer;
+            background: #e67e22;
+            border: none;
+            color: white;
+            border-radius: 8px;
+            transition: 0.2s;
+            margin: 5px;
+            font-weight: bold;
+            box-shadow: 0 4px 0 #d35400;
+        }
+        button:active { transform: translateY(4px); box-shadow: none; }
+
+        /* Game Area */
+        #game-area {
+            flex: 1;
+            background-color: var(--table-color);
+            position: relative;
+            display: none; /* Hidden initially */
+            flex-direction: column;
+        }
+
+        /* Top Score Board */
+        #top-score-panel {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 0; 
+            display: block;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            min-height: 50px;
+            flex-shrink: 0;
+            overflow-x: auto; /* Horizontal scroll */
+            white-space: nowrap;
+        }
+        
+        #score-table {
+            font-size: 0.75em;
+            border-collapse: separate; 
+            border-spacing: 0;
+            width: auto;
+            min-width: 100%;
+        }
+        #score-table th, #score-table td {
+            padding: 4px 6px;
+            border-right: 1px solid rgba(255,255,255,0.2);
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            text-align: center;
+        }
+        #score-table th { background: #263238; color: #ddd; }
+        
+        /* Sticky Name Column */
+        #score-table td:first-child, #score-table th:first-child {
+            position: sticky;
+            left: 0;
+            background: #263238;
+            z-index: 2;
+            border-right: 2px solid rgba(255,255,255,0.4);
+            font-weight: bold;
+        }
+        #score-table tr:nth-child(even) td:first-child { background: #37474f; }
+
+        /* Detailed Scores Styling */
+        .sc-detail { display: flex; gap: 6px; align-items: center; justify-content: center; }
+        .sc-val { font-weight: bold; width: 14px; text-align: center; }
+        .sc-val.r { color: #ff6b6b; }
+        .sc-val.y { color: #ffeaa7; }
+        .sc-val.b { color: #74b9ff; }
+        .sc-val.g { color: #55efc4; }
+
+        /* Opponents */
+        #opponents-area {
+            flex: 1;
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            padding-top: 10px;
+            flex-shrink: 0;
+        }
+
+        .player-box {
+            background: rgba(0,0,0,0.3);
+            padding: 5px 8px;
+            border-radius: 8px;
+            text-align: center;
+            min-width: 85px;
+            max-width: 120px;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+            transform: scale(0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .player-box.active { border-color: #ffd700; background: rgba(255, 215, 0, 0.2); }
+
+        .suit-counts {
+            display: flex;
+            justify-content: center;
+            gap: 3px;
+            margin-top: 4px;
+            font-size: 0.75em;
+            flex-wrap: wrap;
+        }
+        .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right:1px;}
+
+        /* Won Pile */
+        .won-pile-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 5px;
+            min-height: 35px;
+            height: auto;
+            background: rgba(0,0,0,0.2);
+            border-radius: 4px;
+            padding: 4px;
+            min-width: 60px;
+            flex-wrap: wrap; 
+            gap: 3px;
+        }
+
+        .mini-card {
+            width: 24px;
+            height: 32px;
+            border-radius: 3px;
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #333;
+            box-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            margin-left: 0; 
+            position: relative;
+            font-weight: 900;
+            font-size: 18px; 
+            line-height: 1;
+        }
+        
+        .mini-card.red { background: var(--red); color: white; }
+        .mini-card.yellow { background: var(--yellow); color: black; }
+        .mini-card.blue { background: var(--blue); color: white; }
+        .mini-card.green { background: var(--green); color: white; }
+
+
+        /* Center Area */
+        #center-area {
+            flex: 3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center; 
+            position: relative;
+            overflow-y: auto;
+        }
+
+        #instruction-text {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 2px 2px 2px black;
+            margin-bottom: 10px; 
+            height: 35px;
+            text-align: center;
+            width: 100%;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .center-label { font-size: 0.8em; opacity: 0.8; margin-bottom: 3px; margin-top: 5px;}
+        
+        .spotlight-container, .shadows-container, .trick-container {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .trick-card-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .trick-player-label {
+            font-size: 0.75em;
+            color: #ddd;
+            margin-top: 4px;
+            text-shadow: 1px 1px 1px black;
+            white-space: nowrap;
+        }
+
+        /* Cards General */
+        .card {
+            width: var(--card-width);
+            height: var(--card-height);
+            border-radius: 6px;
+            background-color: white;
+            position: relative;
+            box-shadow: 1px 1px 4px rgba(0,0,0,0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.5em;
+            color: #333;
+            user-select: none;
+            transition: transform 0.2s;
+        }
+
+        .card.small {
+            width: calc(var(--card-width) * 0.6);
+            height: calc(var(--card-height) * 0.6);
+            font-size: 1em;
+        }
+
+        .card.red { background: var(--red); color: white; }
+        .card.yellow { background: var(--yellow); color: black; }
+        .card.blue { background: var(--blue); color: white; }
+        .card.green { background: var(--green); color: white; }
+        
+        .card .corner {
+            position: absolute;
+            top: 4px; left: 4px;
+            font-size: 0.6em;
+        }
+
+        /* === Central Cards (Trick & Spotlight) Styling === */
+        #trick-container .card,
+        #spotlight-container .card {
+            font-size: 2.2em; /* Adjusted size */
+        }
+        #trick-container .card .corner,
+        #spotlight-container .card .corner {
+            display: none; /* Hide top-left number */
+        }
+
+        .card.shadow-card { color: transparent; }
+        .card.shadow-card .corner { display: none; }
+
+        .card.selectable:hover {
+            transform: translateY(-20px);
+            cursor: pointer;
+            z-index: 100;
+            box-shadow: 0 0 15px white;
+        }
+        
+        .card.disabled { filter: brightness(0.5); cursor: not-allowed; }
+
+        /* Player Area Container */
+        #player-container-wrapper {
+            flex-shrink: 0;
+            position: relative;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-bottom: 20px;
+        }
+
+        #human-won-wrapper {
+            margin-bottom: 5px;
+            text-align: center;
+            width: 100%;
+            max-width: 300px; 
+        }
+        .human-won-label { font-size: 0.8em; color: #aaa; margin-bottom: 2px; }
+
+        /* Player Hand Specific Styles */
+        #player-hand {
+            height: 160px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            width: 100%;
+        }
+
+        /* HAND CARDS */
+        #player-hand .card {
+            margin-left: -40px; 
+            transform-origin: bottom center;
+            width: 80px; 
+            height: 115px; 
+            font-size: 2.5em; 
+            box-shadow: -2px 0 6px rgba(0,0,0,0.4);
+        }
+        
+        /* === PLAYER HAND CORNER NUMBER (BIGGER) === */
+        #player-hand .card .corner {
+            font-size: 0.6em; /* Increased size for readability */
+            top: 4px; left: 6px;
+        }
+        
+        #player-hand .card:first-child { margin-left: 0; }
+
+        /* Log & Modal */
+        #game-log {
+            text-align: center;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.85em;
+            pointer-events: none;
+            max-height: 60px;
+            overflow: hidden;
+            text-shadow: 1px 1px 2px black;
+            margin-bottom: 5px; 
+        }
+
+        #modal-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+        }
+
+        .modal-content {
+            background: #006064; 
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .result-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em; }
+        .result-table th, .result-table td { border: 1px solid #7f8c8d; padding: 5px; text-align: center; }
+        .result-table th { background: rgba(0,0,0,0.2); }
+        
+        .suit-icon { width: 15px; height: 15px; display: inline-block; border-radius: 2px; vertical-align: middle;}
+
+        /* Shadow selection mode */
+        .shadow-select-mode .shadows-container .card {
+            cursor: pointer;
+            animation: pulse 1s infinite;
+            border: 2px solid white;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @media (max-width: 360px) {
+            #player-hand .card {
+                width: 70px;
+                height: 100px;
+                font-size: 2em;
+                margin-left: -35px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Start Screen -->
+    <div id="start-screen">
+        <h1>Chasing Shadows<br>暗影追踪</h1>
+        
+        <!-- Buttons Moved Here -->
+        <div class="btn-group">
+            <button onclick="game.init(3)">3 人游戏</button>
+            <button onclick="game.init(4)">4 人游戏</button>
+            <button onclick="game.init(5)">5 人游戏</button>
+        </div>
+
+        <!-- Rules Moved Below -->
+        <div class="rules-box">
+            <h3>玩法简介</h3>
+            <ul>
+                <li><strong>跟牌规则：</strong>出牌时必须打出与中央“跟随牌(Shadows)”颜色相同的牌。若手牌无对应颜色，可任意出牌并必须移除一张跟随牌。</li>
+                <li><strong>赢墩规则：</strong>点数小于“聚光灯”牌且最大的牌获胜。若所有牌都大于聚光灯，则点数最大的牌获胜。</li>
+                <li><strong>计分胜利：</strong>赢下的牌用于计分。每种颜色偶数张时弃大留小，奇数张全计分。3轮结束后，分数<strong>最低</strong>者获胜。</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Game Area -->
+    <div id="game-area">
+        
+        <!-- Top Score Panel -->
+        <div id="top-score-panel">
+            <table id="score-table">
+                <!-- Populated by JS -->
+            </table>
+        </div>
+
+        <div id="opponents-area">
+            <!-- Bots generated here -->
+        </div>
+
+        <div id="center-area">
+            <!-- Instruction Text -->
+            <div id="instruction-text"></div>
+
+            <div style="text-align:center">
+                <div class="center-label">聚光灯 (目标 <span id="spotlight-val">?</span>)</div>
+                <div class="spotlight-container" id="spotlight-container"></div>
+            </div>
+            
+            <div style="text-align:center;">
+                <div class="center-label">跟随牌 (Shadows)</div>
+                <div class="shadows-container" id="shadows-container"></div>
+            </div>
+
+            <div style="text-align:center; min-height: 100px; margin-top: 5px;">
+                <div class="center-label">本回合出牌</div>
+                <div class="trick-container" id="trick-container"></div>
+            </div>
+        </div>
+
+        <div id="game-log"></div>
+
+        <div id="player-container-wrapper">
+            <!-- Human Won Pile -->
+            <div id="human-won-wrapper">
+                <div class="human-won-label">你赢得的牌</div>
+                <div class="won-pile-container" id="human-won-pile"></div>
+            </div>
+            
+            <!-- Human Hand -->
+            <div id="player-hand"></div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-overlay">
+        <div class="modal-content" id="modal-body"></div>
+    </div>
+
+    <script>
+        const COLORS = ['red', 'yellow', 'blue', 'green'];
+        const COLOR_NAMES = {'red': '红', 'yellow': '黄', 'blue': '蓝', 'green': '绿'};
+        const COLOR_HEX = {'red': '#e74c3c', 'yellow': '#ffd700', 'blue': '#3498db', 'green': '#2ecc71'};
+
+        class Game {
+            constructor() {
+                this.playerCount = 0;
+                this.maxRound = 3;
+                this.currentRound = 0;
+                this.players = []; 
+                this.deck = [];
+                this.spotlightCard = null;
+                this.shadowCards = [];
+                this.currentTrick = [];
+                this.startPlayerIndex = 0;
+                this.currentPlayerIndex = 0;
+                this.roundScores = []; 
+                this.state = 'menu'; 
+                this.pendingPlayerCard = null;
+            }
+
+            init(count) {
+                this.playerCount = count;
+                document.getElementById('start-screen').style.display = 'none';
+                document.getElementById('game-area').style.display = 'flex';
+                
+                this.players = [];
+                for(let i=0; i<count; i++) {
+                    this.players.push({
+                        id: i,
+                        name: i === 0 ? "你" : `电脑${i}`,
+                        isHuman: i === 0,
+                        hand: [],
+                        scorePile: [],
+                        totalScore: 0,
+                        roundHistory: [null, null, null] 
+                    });
+                }
+                
+                this.setupOpponentsUI();
+                this.updateTopScoreboard(); 
+                
+                this.currentRound = 0;
+                this.startPlayerIndex = Math.floor(Math.random() * count);
+                this.roundScores = []; 
+                for(let r=0; r<3; r++) this.roundScores.push(null);
+                
+                this.startRound();
+            }
+
+            setupOpponentsUI() {
+                const area = document.getElementById('opponents-area');
+                area.innerHTML = '';
+                for(let i=1; i<this.playerCount; i++) {
+                    const div = document.createElement('div');
+                    div.className = 'player-box';
+                    div.id = `p-box-${i}`;
+                    div.innerHTML = `
+                        <div style="font-weight:bold; font-size:0.9em;">${this.players[i].name}</div>
+                        <div class="suit-counts" id="p-counts-${i}"></div>
+                        <div class="won-pile-container" id="won-pile-${i}"></div>
+                    `;
+                    area.appendChild(div);
+                }
+            }
+
+            updateTopScoreboard() {
+                const table = document.getElementById('score-table');
+                // Header
+                let html = `<thead><tr><th>玩家</th>`;
+                for(let r=1; r<=this.maxRound; r++) {
+                    html += `<th>第${r}轮 (红黄蓝绿)</th>`;
+                }
+                html += `</tr></thead><tbody>`;
+
+                // Rows
+                this.players.forEach(p => {
+                    html += `<tr><td>${p.name}</td>`;
+                    for(let r=0; r<this.maxRound; r++) {
+                        const rData = this.roundScores[r];
+                        if(rData && rData[p.id]) {
+                            const s = rData[p.id]; 
+                            let rVal = s.red !== null ? s.red : '-';
+                            let yVal = s.yellow !== null ? s.yellow : '-';
+                            let bVal = s.blue !== null ? s.blue : '-';
+                            let gVal = s.green !== null ? s.green : '-';
+                            
+                            html += `<td>
+                                <div class="sc-detail">
+                                    <span class="sc-val r">${rVal}</span>
+                                    <span class="sc-val y">${yVal}</span>
+                                    <span class="sc-val b">${bVal}</span>
+                                    <span class="sc-val g">${gVal}</span>
+                                </div>
+                            </td>`;
+                        } else {
+                            // Placeholder
+                            html += `<td>
+                                <div class="sc-detail" style="opacity:0.5">
+                                    <span class="sc-val r">-</span>
+                                    <span class="sc-val y">-</span>
+                                    <span class="sc-val b">-</span>
+                                    <span class="sc-val g">-</span>
+                                </div>
+                            </td>`;
+                        }
+                    }
+                    html += `</tr>`;
+                });
+                html += `</tbody>`;
+                table.innerHTML = html;
+            }
+
+            startRound() {
+                this.currentRound++;
+                if(this.currentRound > this.maxRound) {
+                    this.endGame();
+                    return;
+                }
+
+                this.log(`--- 第 ${this.currentRound} 轮开始 ---`);
+
+                // 1. Prepare Deck
+                this.deck = [];
+                let maxNum = 14;
+                if(this.playerCount === 3) maxNum = 10;
+                else if(this.playerCount === 4) maxNum = 13;
+                
+                COLORS.forEach(c => {
+                    for(let n=0; n<=maxNum; n++) {
+                        this.deck.push({color: c, val: n, uid: Math.random()});
+                    }
+                });
+                this.shuffle(this.deck);
+
+                // 2. Center Area
+                this.spotlightCard = this.deck.pop();
+                this.shadowCards = [];
+                for(let i=0; i < this.playerCount - 1; i++) {
+                    this.shadowCards.push(this.deck.pop());
+                }
+                this.updateCenterUI();
+
+                // 3. Deal
+                let handSize = this.playerCount === 5 ? 11 : 13;
+                this.players.forEach(p => {
+                    p.hand = [];
+                    p.scorePile = []; 
+                    for(let i=0; i<handSize; i++) {
+                        if(this.deck.length > 0) p.hand.push(this.deck.pop());
+                    }
+                    this.sortHand(p.hand);
+                });
+
+                this.updatePlayerHandUI();
+                this.updateScorePilesUI(); // Clear/Init won piles
+                this.updateOpponentStats();
+
+                this.currentPlayerIndex = this.startPlayerIndex;
+                this.state = 'playing';
+                this.nextTurn();
+            }
+
+            shuffle(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+            }
+
+            sortHand(hand) {
+                const colorOrder = {red:1, yellow:2, blue:3, green:4};
+                hand.sort((a,b) => {
+                    if(colorOrder[a.color] !== colorOrder[b.color]) return colorOrder[a.color] - colorOrder[b.color];
+                    return a.val - b.val;
+                });
+            }
+
+            updateCenterUI() {
+                // Spotlight
+                const slContainer = document.getElementById('spotlight-container');
+                slContainer.innerHTML = '';
+                slContainer.appendChild(this.createCardDiv(this.spotlightCard, true));
+                document.getElementById('spotlight-val').innerText = this.spotlightCard.val;
+
+                // Shadows
+                const shContainer = document.getElementById('shadows-container');
+                shContainer.innerHTML = '';
+                this.shadowCards.forEach((c, idx) => {
+                    const div = this.createCardDiv(c, true);
+                    div.classList.add('shadow-card'); 
+                    div.dataset.idx = idx;
+                    div.onclick = () => this.handleShadowClick(idx);
+                    shContainer.appendChild(div);
+                });
+
+                // Trick
+                const trContainer = document.getElementById('trick-container');
+                trContainer.innerHTML = '';
+                this.currentTrick.forEach(item => {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'trick-card-wrapper';
+                    
+                    const cardDiv = this.createCardDiv(item.card, true);
+                    
+                    const label = document.createElement('div');
+                    label.className = 'trick-player-label';
+                    label.innerText = this.players[item.pid].name;
+
+                    wrapper.appendChild(cardDiv);
+                    wrapper.appendChild(label);
+                    trContainer.appendChild(wrapper);
+                });
+            }
+
+            updatePlayerHandUI() {
+                const handDiv = document.getElementById('player-hand');
+                handDiv.innerHTML = '';
+                const p = this.players[0];
+                p.hand.forEach((c, idx) => {
+                    const div = this.createCardDiv(c, false); 
+                    div.dataset.idx = idx;
+                    
+                    const isPlayable = this.isCardPlayable(c, p);
+                    if(!isPlayable && this.state === 'playing' && this.currentPlayerIndex === 0) {
+                        div.classList.add('disabled');
+                    } else {
+                        div.classList.add('selectable');
+                        div.onclick = () => this.handlePlayerCardClick(idx);
+                    }
+                    handDiv.appendChild(div);
+                });
+            }
+
+            updateOpponentStats() {
+                for(let i=1; i<this.playerCount; i++) {
+                    const p = this.players[i];
+                    const box = document.getElementById(`p-box-${i}`);
+                    if(this.currentPlayerIndex === i) box.classList.add('active');
+                    else box.classList.remove('active');
+
+                    const counts = {red:0, yellow:0, blue:0, green:0};
+                    p.hand.forEach(c => counts[c.color]++);
+                    
+                    const countsDiv = document.getElementById(`p-counts-${i}`);
+                    countsDiv.innerHTML = '';
+                    COLORS.forEach(col => {
+                        const span = document.createElement('span');
+                        span.style.color = COLOR_HEX[col];
+                        span.style.fontWeight = 'bold';
+                        span.style.marginRight = '6px';
+                        span.innerHTML = `<span class="dot" style="background:${COLOR_HEX[col]}"></span>${counts[col]}`;
+                        countsDiv.appendChild(span);
+                    });
+                }
+            }
+
+            updateScorePilesUI() {
+                this.players.forEach(p => {
+                    let containerId = '';
+                    if(p.isHuman) {
+                        containerId = 'human-won-pile';
+                    } else {
+                        containerId = `won-pile-${p.id}`;
+                    }
+                    
+                    const container = document.getElementById(containerId);
+                    if(container) {
+                        container.innerHTML = '';
+                        p.scorePile.forEach(card => {
+                            const miniDiv = document.createElement('div');
+                            miniDiv.className = `mini-card ${card.color}`;
+                            miniDiv.innerHTML = `${card.val}`;
+                            container.appendChild(miniDiv);
+                        });
+                    }
+                });
+            }
+
+            createCardDiv(card, isSmall) {
+                const div = document.createElement('div');
+                div.className = `card ${card.color} ${isSmall ? 'small' : ''}`;
+                div.innerHTML = `
+                    <span class="corner">${card.val}</span>
+                    <span>${card.val}</span>
+                `;
+                return div;
+            }
+
+            isCardPlayable(card, player) {
+                if(this.currentTrick.length === 0) return true;
+                const shadowColors = new Set(this.shadowCards.map(c => c.color));
+                const hasMatch = player.hand.some(c => shadowColors.has(c.color));
+                if(hasMatch) {
+                    return shadowColors.has(card.color);
+                } else {
+                    return true;
+                }
+            }
+
+            nextTurn() {
+                this.updateCenterUI();
+                this.updatePlayerHandUI();
+                this.updateOpponentStats();
+
+                if(this.currentTrick.length === this.playerCount) {
+                    setTimeout(() => this.resolveTrick(), 1000);
+                    return;
+                }
+
+                const p = this.players[this.currentPlayerIndex];
+                if(p.isHuman) {
+                    this.showInstruction("请出牌");
+                } else {
+                    this.showInstruction(`${p.name} 正在思考...`);
+                    setTimeout(() => this.aiMove(p), 800);
+                }
+            }
+
+            aiMove(player) {
+                const shadowColors = new Set(this.shadowCards.map(c => c.color));
+                const hasMatch = player.hand.some(c => shadowColors.has(c.color));
+                
+                let candidates = [];
+                if(this.currentTrick.length === 0) {
+                    candidates = player.hand;
+                } else if (hasMatch) {
+                    candidates = player.hand.filter(c => shadowColors.has(c.color));
+                } else {
+                    candidates = player.hand; 
+                }
+
+                const cardIndex = player.hand.indexOf(candidates[Math.floor(Math.random() * candidates.length)]);
+                const card = player.hand[cardIndex];
+                
+                player.hand.splice(cardIndex, 1);
+                
+                if(this.currentTrick.length > 0) {
+                    let colorToDiscard = null;
+                    if(shadowColors.has(card.color)) {
+                        colorToDiscard = card.color;
+                    } else {
+                        const randomShadow = this.shadowCards[Math.floor(Math.random() * this.shadowCards.length)];
+                        colorToDiscard = randomShadow.color;
+                    }
+                    
+                    const sIdx = this.shadowCards.findIndex(c => c.color === colorToDiscard);
+                    if(sIdx !== -1) {
+                        this.shadowCards.splice(sIdx, 1);
+                    }
+                }
+
+                this.currentTrick.push({pid: player.id, card: card});
+                this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.playerCount;
+                this.nextTurn();
+            }
+
+            handlePlayerCardClick(idx) {
+                if(this.state !== 'playing' || this.currentPlayerIndex !== 0) return;
+                
+                const player = this.players[0];
+                const card = player.hand[idx];
+
+                if(!this.isCardPlayable(card, player)) {
+                    this.log("必须打出与跟随牌颜色相同的牌！");
+                    return;
+                }
+
+                this.pendingPlayerCard = {card: card, idx: idx};
+                
+                if(this.currentTrick.length === 0) {
+                    this.finalizePlayerMove();
+                } else {
+                    const shadowColors = this.shadowCards.map(c => c.color);
+                    if(shadowColors.includes(card.color)) {
+                        this.discardShadowByColor(card.color);
+                        this.finalizePlayerMove();
+                    } else {
+                        this.state = 'select_shadow';
+                        document.body.classList.add('shadow-select-mode');
+                        this.showInstruction("请选择一张跟随牌移除");
+                        this.updateCenterUI(); 
+                        this.updatePlayerHandUI();
+                    }
+                }
+            }
+
+            handleShadowClick(sIdx) {
+                if(this.state !== 'select_shadow') return;
+                
+                this.shadowCards.splice(sIdx, 1);
+                document.body.classList.remove('shadow-select-mode');
+                this.finalizePlayerMove();
+            }
+
+            discardShadowByColor(color) {
+                const idx = this.shadowCards.findIndex(c => c.color === color);
+                if(idx !== -1) {
+                    this.shadowCards.splice(idx, 1);
+                }
+            }
+
+            finalizePlayerMove() {
+                const p = this.players[0];
+                const {card, idx} = this.pendingPlayerCard;
+                
+                p.hand.splice(idx, 1);
+                this.currentTrick.push({pid: p.id, card: card});
+                
+                this.state = 'playing';
+                this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.playerCount;
+                this.nextTurn();
+            }
+
+            resolveTrick() {
+                this.showInstruction(""); 
+                const slVal = this.spotlightCard.val;
+                
+                const validCandidates = this.currentTrick.filter(t => t.card.val < slVal);
+                let winner = null;
+
+                if(validCandidates.length > 0) {
+                    const maxVal = Math.max(...validCandidates.map(t => t.card.val));
+                    const potentialWinners = validCandidates.filter(t => t.card.val === maxVal);
+                    winner = potentialWinners[potentialWinners.length - 1];
+                } else {
+                    const maxVal = Math.max(...this.currentTrick.map(t => t.card.val));
+                    const potentialWinners = this.currentTrick.filter(t => t.card.val === maxVal);
+                    winner = potentialWinners[potentialWinners.length - 1];
+                }
+
+                const winPlayer = this.players[winner.pid];
+                this.showInstruction(`${winPlayer.name} 赢了! (打出 ${winner.card.val})`);
+
+                setTimeout(() => {
+                    this.showInstruction("");
+                    winPlayer.scorePile.push(this.spotlightCard);
+                    
+                    this.updateScorePilesUI();
+
+                    this.spotlightCard = winner.card;
+                    this.shadowCards = this.currentTrick
+                        .filter(t => t !== winner)
+                        .map(t => t.card);
+                    
+                    this.currentTrick = [];
+                    
+                    if(this.players[0].hand.length === 1) {
+                        this.endRound();
+                    } else {
+                        this.currentPlayerIndex = winPlayer.id;
+                        this.nextTurn();
+                    }
+                }, 2500);
+            }
+
+            endRound() {
+                this.log("--- 本轮结束，开始计分 ---");
+                
+                this.players.forEach(p => {
+                    if(p.hand.length > 0) {
+                        p.scorePile.push(p.hand.pop());
+                    }
+                });
+                this.updateScorePilesUI();
+
+                const roundResult = {};
+                
+                this.players.forEach(p => {
+                    const scoresByColor = {red:0, yellow:0, blue:0, green:0};
+                    const piles = {red:[], yellow:[], blue:[], green:[]};
+                    p.scorePile.forEach(c => piles[c.color].push(c.val));
+
+                    let roundTotal = 0;
+
+                    COLORS.forEach(col => {
+                        const vals = piles[col];
+                        if(vals.length === 0) {
+                            scoresByColor[col] = null;
+                            return;
+                        }
+                        
+                        let score = 0;
+                        if(vals.length % 2 !== 0) {
+                            if(vals.length === 1 && vals[0] === 0) {
+                                score = 15;
+                            } else {
+                                score = vals.reduce((a,b) => a+b, 0);
+                            }
+                        } else {
+                            vals.sort((a,b) => a - b);
+                            const half = vals.length / 2;
+                            for(let i=0; i<half; i++) score += vals[i];
+                        }
+                        scoresByColor[col] = score;
+                        roundTotal += score;
+                    });
+                    roundResult[p.id] = scoresByColor;
+                    p.roundHistory[this.currentRound - 1] = roundTotal;
+                });
+
+                this.roundScores[this.currentRound - 1] = roundResult;
+
+                this.updateTopScoreboard(); 
+                this.showRoundScoreboard(roundResult);
+            }
+
+            showRoundScoreboard(result) {
+                let html = `<h3>第 ${this.currentRound} 轮详情</h3><table class="result-table"><tr><th>玩家</th>`;
+                COLORS.forEach(c => html += `<th><span class="suit-icon" style="background:${COLOR_HEX[c]}"></span></th>`);
+                html += `<th>总计</th></tr>`;
+
+                this.players.forEach(p => {
+                    html += `<tr><td>${p.name}</td>`;
+                    const s = result[p.id];
+                    let rTot = 0;
+                    COLORS.forEach(c => {
+                        const val = s[c] === null ? 0 : s[c];
+                        rTot += val;
+                        html += `<td>${s[c] === null ? '-' : s[c]}</td>`;
+                    });
+                    html += `<td style="font-weight:bold">${rTot}</td></tr>`;
+                });
+                html += `</table><br><button onclick="game.startNextRound()">下一轮</button>`;
+                
+                this.showModal(html);
+            }
+
+            startNextRound() {
+                document.getElementById('modal-overlay').style.display = 'none';
+                this.startPlayerIndex = (this.startPlayerIndex + 1) % this.playerCount;
+                this.startRound();
+            }
+
+            endGame() {
+                let html = `<h2>游戏结束 - 最终得分</h2>`;
+                html += `<div style="text-align:left; font-size:0.9em; color:#aaa;">* 若某花色恰好在两轮有分，划掉较早得分。</div>`;
+                html += `<table class="result-table"><tr><th>玩家</th><th>原始分</th><th>修正后总分</th></tr>`;
+
+                let winner = null;
+                let minScore = Infinity;
+                
+                this.players.forEach(p => {
+                    let finalTotal = 0;
+                    let rawTotal = 0;
+
+                    COLORS.forEach(col => {
+                        const roundVals = [];
+                        for(let r=0; r<3; r++) {
+                            if(this.roundScores[r] && this.roundScores[r][p.id]) {
+                                const val = this.roundScores[r][p.id][col];
+                                if(val !== null) roundVals.push({r: r, val: val});
+                            }
+                        }
+
+                        let colScore = 0;
+                        if(roundVals.length === 2) {
+                            colScore = roundVals[1].val; 
+                        } else {
+                            colScore = roundVals.reduce((a,b) => a + b.val, 0);
+                        }
+                        
+                        rawTotal += roundVals.reduce((a,b) => a + b.val, 0);
+                        finalTotal += colScore;
+                    });
+
+                    p.totalScore = finalTotal;
+                    html += `<tr><td>${p.name}</td><td>${rawTotal}</td><td style="font-weight:bold; color:#f1c40f; font-size:1.2em">${finalTotal}</td></tr>`;
+                    
+                    if(finalTotal < minScore) {
+                        minScore = finalTotal;
+                        winner = p;
+                    } else if (finalTotal === minScore) {
+                        const pLastRoundCount = p.scorePile.length;
+                        const wLastRoundCount = winner.scorePile.length;
+                        if(pLastRoundCount < wLastRoundCount) {
+                            winner = p;
+                        }
+                    }
+                });
+                html += `</table>`;
+                html += `<h1 style="color:#2ecc71; margin-top:20px;">获胜者: ${winner.name}</h1>`;
+                html += `<button onclick="location.reload()">重新开始</button>`;
+                
+                this.showModal(html);
+            }
+
+            showModal(content) {
+                const m = document.getElementById('modal-overlay');
+                const b = document.getElementById('modal-body');
+                b.innerHTML = content;
+                m.style.display = 'flex';
+            }
+
+            log(msg) {
+                const logDiv = document.getElementById('game-log');
+                const p = document.createElement('div');
+                p.innerText = msg;
+                logDiv.prepend(p);
+            }
+
+            showInstruction(text) {
+                const el = document.getElementById('instruction-text');
+                el.innerText = text;
+            }
+        }
+
+        const game = new Game();
+
+    </script>
+</body>
+</html>
